@@ -6,7 +6,7 @@ const simulationLogSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Architecture' 
     },
-    userId: { 
+    userId: {   
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', required: true 
     },
