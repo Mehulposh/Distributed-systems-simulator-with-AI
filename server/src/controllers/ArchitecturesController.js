@@ -1,4 +1,4 @@
-import Architecture from '../models/architectureModel.jsc '
+import Architecture from '../models/architectureModel.js'
 
 // GET /api/architectures — user's saved architectures
 const getArchitectures = async (req,res) => {
@@ -129,5 +129,5 @@ export {
     getArchitectureById,
     getArchitectures,
     getPublicArchitectures
-    
+
 }
