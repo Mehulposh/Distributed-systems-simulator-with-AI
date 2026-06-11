@@ -1,11 +1,9 @@
 import express from 'express';
-import axios from 'axios';
 import { authenticate } from '../middleware/authMiddleware.js';
+import { GoogleGenAI } from "@google/genai";
 
 const router = express.Router();
 
-const OLLAMA_URL = 'http://localhost:11434/api/generate';
-const MODEL = 'llama3'; // or mistral, qwen3, deepseek-r1
 
 const SYSTEM_PROMPT = `You are ArchAI, an expert distributed systems architect and educator embedded in a visual system design simulator. You help users:
 1. Analyze their architecture diagrams for bottlenecks, single points of failure, and scalability issues
@@ -23,14 +21,17 @@ When analyzing architectures, be specific about:
 Keep responses concise but informative. Use bullet points for lists. Include rough metric estimates where possible.`;
 
 
-async function askOllama(prompt, system = '') {
-  const response = await axios.post(OLLAMA_URL, {
-    model: MODEL,
-    prompt: `${system}\n\n${prompt}`,
-    stream: false
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+async function askGemini(prompt, system = '') {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `${system}\n\n${prompt}`,
   });
 
-  return response.data.response;
+  return response.text;
 }
 
 // POST /api/ai/analyze
@@ -40,7 +41,7 @@ router.post('/analyze', authenticate, async (req, res) => {
 
     const archDescription = buildArchDescription(nodes, edges, metrics);
 
-    const analysis = await askOllama(
+    const analysis = await askGemini(
     `Analyze this distributed system architecture:
     
         ${archDescription}`,
@@ -63,7 +64,7 @@ router.post('/chat', authenticate, async (req, res) => {
       .map((m) => `${m.role}: ${m.content}`)
       .join('\n');
 
-    const reply = await askOllama(
+    const reply = await askGemini(
       conversation,
       context
         ? `${SYSTEM_PROMPT}\n\nArchitecture:\n${context}`
@@ -84,33 +85,34 @@ router.post('/generate-preset', authenticate, async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    const response = await askOllama(
-        `Generate a distributed system architecture for:
+    const Response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
 
-        ${prompt}
+      contents: `Generate architecture for ${prompt}`,
 
-        Respond ONLY with valid JSON.`,
-        `${SYSTEM_PROMPT}
+      config: {
+        responseMimeType: "application/json",
 
-        Return JSON in this format:
-        {
-            "name": "",
-            "description": "",
-            "nodes": [],
-            "edges": [],
-            "explanation": ""
-        }`
-    );
+        responseSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string" },
+            explanation: { type: "string" },
+            nodes: {
+              type: "array",
+              items: { type: "object" }
+            },
+            edges: {
+              type: "array",
+              items: { type: "object" }
+            }
+          }
+        }
+      }
+    });
 
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-
-    if (!jsonMatch) {
-        return res.status(500).json({
-            error: 'Could not parse architecture'
-        });
-    }
-
-    const architecture = JSON.parse(jsonMatch[0]);
+    const architecture = JSON.parse(Response.text);
 
     res.json(architecture);
   } catch (err) {
@@ -123,7 +125,7 @@ router.post('/explain-component', authenticate, async (req, res) => {
   try {
     const { componentType, label, metrics } = req.body;
 
-    const explanation = await askOllama(
+    const explanation = await askGemini(
         `Explain this component:
 
         Component type: ${componentType}
