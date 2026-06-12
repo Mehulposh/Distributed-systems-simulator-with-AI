@@ -16,11 +16,13 @@ function MetricBadge({ value, label, color = '#94a3b8' }) {
 
 const SimNode = memo(({ id, data, selected }) => {  
   const { nodeMetrics, isSimulating, failedNodes, setSelectedNode } = useAppStore();
-  const config = NODE_TYPES[data.type] || NODE_TYPES.server;
+
+  const nodeData = data || {};
+  const config = NODE_TYPES[nodeData?.type] || NODE_TYPES.server;
   const metrics = nodeMetrics.find((m) => m.nodeId === id);
   const isDown = failedNodes.includes(id);
   const status = isDown ? 'down' : metrics?.status || 'healthy';
-  const style = getNodeStyle(data.type, status);
+  const style = getNodeStyle(nodeData?.type || "server", status);
 
   const statusDotColor = {
     healthy: '#22c55e',
@@ -64,7 +66,7 @@ const SimNode = memo(({ id, data, selected }) => {
           <span className="text-lg">{config.icon}</span>
           <div>
             <div className="text-xs font-semibold" style={{ color: style.color }}>
-              {data.label || config.label}
+              {nodeData?.label || "Unknown Node"}
             </div>
             <div className="text-[10px] text-slate-500">{config.label}</div>
           </div>
