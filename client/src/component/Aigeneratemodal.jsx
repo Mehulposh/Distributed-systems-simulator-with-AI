@@ -30,8 +30,16 @@ export default function AIGenerateModal({ onClose }) {
       const data = await aiAPI.generatePreset({ prompt });
       setResult(data);
     } catch (err) {
-        console.error(err)
-      setError('Generation failed. Please check your API key.');
+         try {
+            const message =
+            JSON.parse(err?.error)?.error?.message ??
+            "Failed to generate architecture";
+            
+            console.error(message)
+            setError(message);
+        } catch {
+            setError("Failed to generate architecture");
+        }
     } finally {
       setLoading(false);
     }
