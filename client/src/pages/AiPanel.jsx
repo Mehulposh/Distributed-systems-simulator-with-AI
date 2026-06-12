@@ -1,5 +1,5 @@
 import  { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, BarChart2, Cpu, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, Sparkles, BarChart2, RefreshCw } from 'lucide-react';
 import { useAppStore } from '../zustand/UseAppstore.js';
 import { aiAPI } from '../api/apiService.js';
 
@@ -69,6 +69,7 @@ function TypingIndicator() {
 }
 
 export default function AIPanel() {
+  
   const { nodes, edges, nodeMetrics, globalMetrics } = useAppStore();
   const [messages, setMessages] = useState([
     {
@@ -108,47 +109,33 @@ export default function AIPanel() {
     setMessages(newMessages);
     setLoading(true);
 
-    try {
-      const context = buildContext();
-      const response = await aiAPI.chat(
-        newMessages.map((m) => ({ role: m.role, content: m.content })),
+    try{
+        const context = buildContext()
+        const data = await aiAPI.chat(
+        newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+        })),
         context
-      );
+        );
 
-      if (!response.ok) throw new Error('Stream failed');
+        console.log('chat response', data);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = '';
+        // if (!response.ok) {
+        // const error = await response.json();
+        // throw new Error(error.error || 'Chat failed');
+        // }
 
-      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+        // const data = await response.json();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter((l) => l.startsWith('data: '));
-
-        for (const line of lines) {
-          const data = line.slice(6);
-          if (data === '[DONE]') break;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.text) {
-              assistantContent += parsed.text;
-              setMessages((prev) => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                return updated;
-              });
-            }
-          } catch (err) {
-            console.error(err);
-          }
-        }
-      }
-    } catch (err) {
+        setMessages((prev) => [
+        ...prev,
+        {
+            role: 'assistant',
+            content: data.reply,
+        },
+        ]);
+    }catch (err) {
         console.error(err)
       setMessages((prev) => [
         ...prev,
