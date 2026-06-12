@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { X, FolderOpen, Trash2, Clock } from 'lucide-react';
 import { archAPI } from '../api/apiService.js';
 import { useAppStore } from '../zustand/UseAppstore.js';
@@ -68,7 +68,7 @@ export default function LoadModal({ onClose }) {
           ) : (
             <div className="space-y-2">
               {architectures.map((arch) => (
-                <button
+                <div
                   key={arch._id}
                   onClick={() => loadArch(arch)}
                   className="w-full text-left px-4 py-3 rounded-xl transition-all hover:bg-surface-300 group"
@@ -92,7 +92,7 @@ export default function LoadModal({ onClose }) {
                     <span>·</span>
                     <span>{arch.nodes?.length || 0} nodes</span>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
