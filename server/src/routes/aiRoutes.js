@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { GoogleGenAI } from "@google/genai";
+import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
@@ -88,7 +89,39 @@ router.post('/generate-preset', authenticate, async (req, res) => {
     const Response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
 
-      contents: `Generate architecture for ${prompt}`,
+      contents: `
+        Generate a distributed system architecture for:
+
+        ${prompt}
+
+        Return JSON only.
+
+        Node types allowed:
+        server
+        database
+        cache
+        queue
+        loadbalancer
+        cdn
+        storage
+
+        Each node must be:
+
+        {
+          "name": "API Gateway",
+          "nodeType": "loadbalancer"
+        }
+
+        Each edge must be:
+
+        {
+          "source": "API Gateway",
+          "target": "User Service"
+        }
+
+        Do not generate IDs.
+        Do not generate coordinates.
+        `,
 
       config: {
         responseMimeType: "application/json",
@@ -97,15 +130,33 @@ router.post('/generate-preset', authenticate, async (req, res) => {
           type: "object",
           properties: {
             name: { type: "string" },
+
             description: { type: "string" },
+
             explanation: { type: "string" },
+
             nodes: {
               type: "array",
-              items: { type: "object" }
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  nodeType: { type: "string" }
+                },
+                required: ["name", "nodeType"]
+              }
             },
+
             edges: {
               type: "array",
-              items: { type: "object" }
+              items: {
+                type: "object",
+                properties: {
+                  source: { type: "string" },
+                  target: { type: "string" }
+                },
+                required: ["source", "target"]
+              }
             }
           }
         }
@@ -114,7 +165,88 @@ router.post('/generate-preset', authenticate, async (req, res) => {
 
     const architecture = JSON.parse(Response.text);
 
-    res.json(architecture);
+    const nodeMap = new Map();
+
+      const rfNodes = architecture.nodes.map((node, index) => {
+        const id = randomUUID();
+
+        nodeMap.set(node.name, id);
+
+        return {
+          id,
+          type: 'simNode',
+
+          position: {
+            x: 250 * (index % 4),
+            y: 180 * Math.floor(index / 4)
+          },
+
+          data: {
+            type: [
+              'server',
+              'database',
+              'cache',
+              'queue',
+              'loadbalancer',
+              'cdn',
+              'storage'
+            ].includes(node.nodeType)
+              ? node.nodeType
+              : 'server',
+
+            label: node.name
+          }
+        };
+      });
+
+      const rfEdges = architecture.edges
+        .filter(
+          edge =>
+            nodeMap.has(edge.source) &&
+            nodeMap.has(edge.target)
+        )
+        .map(edge => ({
+          id: randomUUID(),
+          source: nodeMap.get(edge.source),
+          target: nodeMap.get(edge.target),
+          type: 'smoothstep'
+        }));
+    
+    console.log(
+      JSON.stringify(
+        {
+          nodes: rfNodes,
+          edges: rfEdges
+        },
+        null,
+        2
+      )
+    );
+   if (
+      !architecture.nodes ||
+      architecture.nodes.some(
+        (n) => !n.name || !n.nodeType
+      )
+    ) {
+      throw new Error("Invalid architecture returned by AI");
+    }
+
+    if (
+      !architecture.edges ||
+      architecture.edges.some(
+        (e) => !e.source || !e.target
+      )
+    ) {
+      throw new Error("Invalid edges returned by AI");
+    }
+
+    res.json({
+      name: architecture.name,
+      description: architecture.description,
+      explanation: architecture.explanation,
+      nodes: rfNodes,
+      edges: rfEdges
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
