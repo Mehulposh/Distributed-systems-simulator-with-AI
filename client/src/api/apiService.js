@@ -54,16 +54,19 @@ export const aiAPI = {
 
   // Streaming chat — returns a fetch response
   chat: async (messages, context) => {
-    const token = localStorage.getItem('token');
-    return fetch('/api/ai/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ messages, context }),
-    });
-  },
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ messages, context }),
+        });
+
+        return response.json();
+    },
 };
 
 export default api;
