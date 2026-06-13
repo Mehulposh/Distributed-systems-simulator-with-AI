@@ -1,4 +1,4 @@
-import  { useCallback, useMemo } from 'react';
+import  { useCallback, useMemo , useEffect , useRef} from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -18,11 +18,41 @@ const nodeTypes = {
   simNode: SimNode,
 };
 
-export default function Canvas({ onNodeDrop }) {
-  const { setNodes: storeSetNodes, setEdges: storeSetEdges, isSimulating, nodes: storeNodes, edges: storeEdges } = useAppStore();
+export default function Canvas() {
+  const { 
+    setNodes: storeSetNodes, 
+    setEdges: storeSetEdges, 
+    isSimulating, 
+    nodes: storeNodes, 
+    edges: storeEdges 
+} = useAppStore();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  // Keep a ref to the "version" of storeNodes so we can tell when an external
+  // write happened (preset load / AI generate / load-from-db).
+  // We compare serialised IDs rather than array length alone so renaming/
+  // replacing nodes of the same count is also detected.
+
+  const storeNodesKey = storeNodes.map((n) => n.id).join(',');
+  const storeEdgesKey = storeEdges.map((e) => e.id).join(',');
+  const prevNodesKey = useRef('');
+  const prevEdgesKey = useRef('');
+
+  useEffect(() => {
+    if (storeNodesKey !== prevNodesKey.current) {
+      prevNodesKey.current = storeNodesKey;
+      setNodes(storeNodes);
+    }
+  }, [storeNodesKey]);
+ 
+  useEffect(() => {
+    if (storeEdgesKey !== prevEdgesKey.current) {
+      prevEdgesKey.current = storeEdgesKey;
+      setEdges(storeEdges);
+    }
+  }, [storeEdgesKey]);
 
   // Sync to store on change
   const handleNodesChange = useCallback(
@@ -40,9 +70,14 @@ export default function Canvas({ onNodeDrop }) {
   );
 
   // Commit to store after drag/connect
-  const handleNodeDragStop = useCallback(() => {
-    storeSetNodes(nodes);
-  }, [nodes, storeSetNodes]);
+ const handleNodeDragStop = useCallback(
+    (_, node) => {
+      storeSetNodes((prev) =>
+        prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n))
+      );
+    },
+    [storeSetNodes]
+  );
 
   const onConnect = useCallback(
     (params) => {
