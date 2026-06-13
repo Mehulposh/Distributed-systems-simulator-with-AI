@@ -17,8 +17,18 @@ export const useAppStore = create((set) => ({
   // Canvas nodes/edges
   nodes: [],
   edges: [],
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
+  setNodes: (nodesOrUpdater) =>
+    set((state) => ({
+      nodes: typeof nodesOrUpdater === 'function'
+        ? nodesOrUpdater(state.nodes)
+        : nodesOrUpdater,
+    })),
+  setEdges: (edgesOrUpdater) =>
+    set((state) => ({
+      edges: typeof edgesOrUpdater === 'function'
+        ? edgesOrUpdater(state.edges)
+        : edgesOrUpdater,
+    })),
 
   // Selected node for inspect panel
   selectedNode: null,
