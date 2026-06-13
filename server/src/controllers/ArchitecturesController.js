@@ -1,5 +1,36 @@
 import Architecture from '../models/architectureModel.js'
 
+// ── Sanitise nodes before saving to MongoDB ─────────────────────────────────
+const TYPE_ALIAS = {
+  loadbalancer: 'loadBalancer', load_balancer: 'loadBalancer',
+  queue: 'messageQueue', mq: 'messageQueue', kafka: 'messageQueue',
+  redis: 'cache', memcached: 'cache',
+  db: 'database', postgres: 'database', mysql: 'database', mongodb: 'database', storage: 'database',
+  dbreplica: 'replica', read_replica: 'replica',
+  gateway: 'apiGateway', api_gateway: 'apiGateway',
+  shards: 'shard', partition: 'shard',
+  app: 'server', service: 'server', microservice: 'server', worker: 'server',
+  simnode: 'server',
+};
+const VALID_TYPES = new Set([
+  'loadBalancer','cache','database','replica','messageQueue','apiGateway','cdn','shard','server'
+]);
+function normaliseNodeType(raw = '') {
+  const key = raw.toString().toLowerCase().trim();
+  if (VALID_TYPES.has(raw)) return raw;
+  return TYPE_ALIAS[key] || 'server';
+}
+function sanitiseNodes(nodes = []) {
+  return nodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      type: normaliseNodeType(n.data?.type || ''),
+    },
+  }));
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 // GET /api/architectures — user's saved architectures
 const getArchitectures = async (req,res) => {
     try {
@@ -56,7 +87,7 @@ const createArchitecture = async (req,res) => {
             userId: req.user._id,
             name,
             description,
-            nodes: nodes || [],
+            nodes: sanitiseNodes(nodes || []),
             edges: edges || [],
             isPublic: isPublic || false,
             tags: tags || [],
@@ -71,10 +102,12 @@ const createArchitecture = async (req,res) => {
 // PUT /api/architectures/:id
 const editArchitecture = async (req,res) => {
     try {
-        const arch = await Architecture.findOne({ _id: req.params.id, userId: req.user._id });
+       const arch = await Architecture.findOne({ _id: req.params.id, userId: req.user._id });
         if (!arch) return res.status(404).json({ error: 'Architecture not found' });
     
-        Object.assign(arch, req.body);
+        const updateData = { ...req.body };
+        if (updateData.nodes) updateData.nodes = sanitiseNodes(updateData.nodes);
+        Object.assign(arch, updateData);
         await arch.save();
         res.json(arch);
     } catch (err) {
