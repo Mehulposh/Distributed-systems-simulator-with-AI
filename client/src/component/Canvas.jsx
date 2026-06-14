@@ -18,14 +18,18 @@ const nodeTypes = {
   simNode: SimNode,
 };
 
+
 export default function Canvas() {
-  const { 
-    setNodes: storeSetNodes, 
-    setEdges: storeSetEdges, 
-    isSimulating, 
-    nodes: storeNodes, 
-    edges: storeEdges 
-} = useAppStore();
+  const {
+    setNodes: storeSetNodes,
+    setEdges: storeSetEdges,
+    isSimulating,
+    nodes: storeNodes,
+    edges: storeEdges,
+    deleteNode,
+    deleteEdge,
+    selectedNode,
+  } = useAppStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -34,7 +38,6 @@ export default function Canvas() {
   // write happened (preset load / AI generate / load-from-db).
   // We compare serialised IDs rather than array length alone so renaming/
   // replacing nodes of the same count is also detected.
-
   const storeNodesKey = storeNodes.map((n) => n.id).join(',');
   const storeEdgesKey = storeEdges.map((e) => e.id).join(',');
   const prevNodesKey = useRef('');
@@ -46,7 +49,7 @@ export default function Canvas() {
       setNodes(storeNodes);
     }
   }, [storeNodesKey]);
- 
+
   useEffect(() => {
     if (storeEdgesKey !== prevEdgesKey.current) {
       prevEdgesKey.current = storeEdgesKey;
@@ -54,23 +57,34 @@ export default function Canvas() {
     }
   }, [storeEdgesKey]);
 
-  // Sync to store on change
+  // ── Keyboard delete handler ───────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't fire when typing in an input / textarea
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedNode) {
+          deleteNode(selectedNode.id);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, deleteNode]);
+  // ─────────────────────────────────────────────────────────────────────────
+
   const handleNodesChange = useCallback(
-    (changes) => {
-      onNodesChange(changes);
-    },
+    (changes) => onNodesChange(changes),
     [onNodesChange]
   );
 
   const handleEdgesChange = useCallback(
-    (changes) => {
-      onEdgesChange(changes);
-    },
+    (changes) => onEdgesChange(changes),
     [onEdgesChange]
   );
 
-  // Commit to store after drag/connect
- const handleNodeDragStop = useCallback(
+  // Persist positions back to store after user drags a node
+  const handleNodeDragStop = useCallback(
     (_, node) => {
       storeSetNodes((prev) =>
         prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n))
@@ -103,10 +117,10 @@ export default function Canvas() {
       const type = event.dataTransfer.getData('application/simnode');
       if (!type) return;
 
-      const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+      const bounds = event.currentTarget.getBoundingClientRect();
       const position = {
-        x: event.clientX - reactFlowBounds.left - 80,
-        y: event.clientY - reactFlowBounds.top - 40,
+        x: event.clientX - bounds.left - 80,
+        y: event.clientY - bounds.top - 40,
       };
 
       const config = NODE_TYPES[type] || NODE_TYPES.server;
@@ -114,11 +128,7 @@ export default function Canvas() {
         id: uuid(),
         type: 'simNode',
         position,
-        data: {
-          type,
-          label: config.label,
-          ...config.defaultData,
-        },
+        data: { type, label: config.label, ...config.defaultData },
       };
 
       setNodes((nds) => {
@@ -135,7 +145,6 @@ export default function Canvas() {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  // Update edge animation when simulation starts/stops
   const animatedEdges = useMemo(
     () =>
       edges.map((e) => ({
@@ -162,18 +171,17 @@ export default function Canvas() {
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodeDragStop={handleNodeDragStop}
+        onEdgesDelete={(deletedEdges) => {
+          deletedEdges.forEach((e) => deleteEdge(e.id));
+        }}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.2 }}
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Shift"
         proOptions={{ hideAttribution: true }}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="#1e2335"
-        />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#1e2335" />
         <Controls />
         <MiniMap
           nodeColor={minimapNodeColor}
@@ -184,7 +192,7 @@ export default function Canvas() {
         {nodes.length === 0 && (
           <Panel position="top-center">
             <div className="mt-20 text-center pointer-events-none select-none">
-              <div className="text-4xl mb-3 opacity-30">⬡</div>
+              <div className="text-4xl mb-3 opacity-30">&#x2B21;</div>
               <p className="text-slate-500 text-sm">
                 Drag components from the sidebar to build your architecture
               </p>
