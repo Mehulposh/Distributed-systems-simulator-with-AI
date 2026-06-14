@@ -1,9 +1,8 @@
-import  { useState } from 'react';
+import  { useState , useEffect} from 'react';
 import { X, Zap, Trash2 } from 'lucide-react';
 import { useAppStore } from '../zustand/UseAppstore.js';
 import { NODE_TYPES } from '../config/NodeTypes.js';
 import { aiAPI } from '../api/apiService.js';
-
 
 
 function StatRow({ label, value, unit = '', color }) {
@@ -23,6 +22,13 @@ export default function NodeInspector() {
   const [explanation, setExplanation] = useState('');
   const [loadingExpl, setLoadingExpl] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Reset all local state whenever the selected node changes
+  useEffect(() => {
+    setExplanation('');
+    setLoadingExpl(false);
+    setConfirmDelete(false);
+  }, [selectedNode?.id]);
 
   if (!selectedNode) return null;
 
@@ -82,7 +88,7 @@ export default function NodeInspector() {
           </div>
         </div>
         <button onClick={() => { setSelectedNode(null); setConfirmDelete(false); }}
-          className="text-slate-500 hover:text-slate-300 transition-colors shrink-0 ml-2">
+          className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0 ml-2">
           <X size={14} />
         </button>
       </div>
@@ -117,7 +123,7 @@ export default function NodeInspector() {
               <StatRow label="Cache Hit" value={(metrics.cacheHitRatio * 100).toFixed(1)} unit="%" color="#fbbf24" />
             )}
             <div className="mt-2 flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full shrink-0"
+              <div className="w-2 h-2 rounded-full flex-shrink-0"
                 style={{ background: { healthy:'#22c55e', warning:'#f59e0b', critical:'#ef4444', down:'#475569' }[metrics.status] }} />
               <span className="text-[11px] font-medium capitalize"
                 style={{ color: { healthy:'#22c55e', warning:'#f59e0b', critical:'#ef4444', down:'#475569' }[metrics.status] }}>
