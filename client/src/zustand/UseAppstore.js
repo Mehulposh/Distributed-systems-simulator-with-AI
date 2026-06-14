@@ -29,6 +29,20 @@ export const useAppStore = create((set) => ({
         ? edgesOrUpdater(state.edges)
         : edgesOrUpdater,
     })),
+  
+  // Delete a node and all its connected edges
+  deleteNode: (nodeId) =>
+    set((state) => ({
+      nodes: state.nodes.filter((n) => n.id !== nodeId),
+      edges: state.edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
+      selectedNode: state.selectedNode?.id === nodeId ? null : state.selectedNode,
+    })),
+ 
+  // Delete a single edge
+  deleteEdge: (edgeId) =>
+    set((state) => ({
+      edges: state.edges.filter((e) => e.id !== edgeId),
+    })),
 
   // Selected node for inspect panel
   selectedNode: null,
