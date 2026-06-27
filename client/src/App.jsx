@@ -13,8 +13,9 @@ import LoadModal from './component/Loadmodal.jsx';
 import AlertsToast from './component/Alertstoast.jsx';
 import { useSimulationSocket } from './socket/UseSimulationSocket.jsx';
 import { BarChart2, MessageSquare, LogIn, LogOut, User,
-  LayoutDashboard, Bot, Menu, X, } from 'lucide-react';
+  LayoutDashboard, Bot, Menu, X, ShieldCheck } from 'lucide-react';
 
+import AdminDashboard from './pages/Admindashboard.jsx';
 
 // Hook to get window width reactively
 function useWindowWidth() {
@@ -33,10 +34,11 @@ export default function App() {
     nodes, edges, currentArchName, currentArchId, setCurrentArchId,
   } = useAppStore();
 
-  const [showAuth, setShowAuth] = useState(false);
-  const [showAIGen, setShowAIGen] = useState(false);
-  const [showLoad, setShowLoad] = useState(false);
-  const [rightPanel, setRightPanel] = useState('metrics'); // 'metrics' | 'ai'
+  const [showAuth, setShowAuth]     = useState(false);
+  const [showAIGen, setShowAIGen]   = useState(false);
+  const [showLoad, setShowLoad]     = useState(false);
+  const [showAdmin, setShowAdmin]   = useState(false);
+  const [rightPanel, setRightPanel] = useState('metrics');
   const [saveStatus, setSaveStatus] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);  // mobile drawer
   const [mobileTab, setMobileTab]   = useState('canvas'); // canvas | metrics | ai
@@ -45,22 +47,17 @@ export default function App() {
   const isMobile = width < 768;
   const isTablet = width >= 768 && width < 1024;
 
-  // Initialize socket
   useSimulationSocket();
 
-  // Fetch user on mount if token exists
   useEffect(() => {
     if (token && !user) {
-      authAPI.me().then(({ user:u }) => setUser(u)).catch(() => {});
+      authAPI.me().then(({ user: u }) => setUser(u)).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleSave = async () => {
-    if (!token) {
-      setShowAuth(true);
-      return;
-    }
+    if (!token) { setShowAuth(true); return; }
     try {
       const payload = {
         name: currentArchName,
@@ -75,8 +72,7 @@ export default function App() {
       }
       setSaveStatus('Saved!');
       setTimeout(() => setSaveStatus(''), 2000);
-    } catch (err) {
-      console.error(err)
+    } catch {
       setSaveStatus('Save failed');
       setTimeout(() => setSaveStatus(''), 2000);
     }
@@ -100,12 +96,21 @@ export default function App() {
           <div className="flex items-center gap-1.5">
             {saveStatus && <span className="text-[10px] text-green-400">{saveStatus}</span>}
             {user ? (
-              <button onClick={logout}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-xs"
-                style={{ background: '#1e2335', color: '#94a3b8' }}>
-                <User size={11} />
-                <LogOut size={10} />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {user?.role === 'admin' && (
+                  <button onClick={() => setShowAdmin(true)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg"
+                    style={{ background: '#4c6ef520' }}>
+                    <ShieldCheck size={14} color="#6b8cff" />
+                  </button>
+                )}
+                <button onClick={logout}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs"
+                  style={{ background: '#1e2335', color: '#94a3b8' }}>
+                  <User size={11} />
+                  <LogOut size={10} />
+                </button>
+              </div>
             ) : (
               <button onClick={() => setShowAuth(true)}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium"
@@ -116,7 +121,7 @@ export default function App() {
             )}
           </div>
         </div>
- 
+
         {/* Toolbar (compact) */}
         <Toolbar
           onSave={handleSave}
@@ -124,7 +129,7 @@ export default function App() {
           onAIGenerate={() => { if (!token) { setShowAuth(true); return; } setShowAIGen(true); }}
           compact
         />
- 
+
         {/* Content area — swapped by tab */}
         <div className="flex-1 overflow-hidden relative">
           <div style={{ display: mobileTab === 'canvas' ? 'block' : 'none', height: '100%' }}>
@@ -138,7 +143,7 @@ export default function App() {
             <AIPanel />
           </div>
         </div>
- 
+
         {/* Mobile bottom nav */}
         <div className="flex shrink-0" style={{ background: '#12151d', borderTop: '1px solid #1e2335', height: 56 }}>
           {[
@@ -157,7 +162,7 @@ export default function App() {
             </button>
           ))}
         </div>
- 
+
         {/* Mobile sidebar drawer */}
         {sidebarOpen && (
           <div className="fixed inset-0 z-50 flex">
@@ -175,15 +180,16 @@ export default function App() {
             </div>
           </div>
         )}
- 
+
         <AlertsToast />
         {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
         {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
         {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
+        {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
       </div>
     );
   }
- 
+
   // ── TABLET LAYOUT (768–1023px) ─────────────────────────────────────────────
   if (isTablet) {
     return (
@@ -217,6 +223,14 @@ export default function App() {
                 <span className="text-[10px] px-2 py-1 rounded-md" style={{ background: '#1e2335', color: '#94a3b8' }}>
                   {user.name.split(' ')[0]}
                 </span>
+                {user?.role === 'admin' && (
+                  <button onClick={() => setShowAdmin(true)}
+                    className="w-6 h-6 flex items-center justify-center rounded-md transition-all"
+                    style={{ background: '#4c6ef520', color: '#6b8cff' }}
+                    title="Admin Dashboard">
+                    <ShieldCheck size={11} />
+                  </button>
+                )}
                 <button onClick={logout} className="text-slate-500 hover:text-slate-300 p-1">
                   <LogOut size={11} />
                 </button>
@@ -230,14 +244,14 @@ export default function App() {
             )}
           </div>
         </div>
- 
+
         {/* Main: sidebar + canvas stacked with right panel below */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left sidebar narrow */}
           <div className="shrink-0" style={{ width: 200 }}>
             <Sidebar narrow />
           </div>
- 
+
           {/* Center + right stacked vertically */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <Toolbar
@@ -258,15 +272,16 @@ export default function App() {
             </div>
           </div>
         </div>
- 
+
         <AlertsToast />
         {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
         {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
         {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
+        {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
       </div>
     );
   }
- 
+
   // ── DESKTOP LAYOUT (1024px+) ───────────────────────────────────────────────
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0d0f14' }}>
@@ -297,6 +312,13 @@ export default function App() {
               style={{ background: '#1e2335', color: '#94a3b8' }}>
               <User size={11} />{user.name}
             </div>
+            {user?.role === 'admin' && (
+              <button onClick={() => setShowAdmin(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all hover:opacity-90"
+                style={{ background: '#4c6ef520', color: '#6b8cff', border: '1px solid #4c6ef540' }}>
+                <ShieldCheck size={11} />Admin
+              </button>
+            )}
             <button onClick={logout}
               className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-slate-500 hover:text-slate-300 transition-colors">
               <LogOut size={11} />
@@ -310,7 +332,7 @@ export default function App() {
           </button>
         )}
       </div>
- 
+
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
@@ -324,17 +346,17 @@ export default function App() {
             <NodeInspector />
           </div>
         </div>
-        <div className="shrink-0 overflow-hidden"
+        <div className= "shrink-0 overflow-hidden"
           style={{ width: 340, borderLeft: '1px solid #1e2335' }}>
           {rightPanel === 'metrics' ? <MetricsDashboard /> : <AIPanel />}
         </div>
       </div>
- 
+
       <AlertsToast />
       {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
       {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
       {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
+      {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
     </div>
   );
-
 }
