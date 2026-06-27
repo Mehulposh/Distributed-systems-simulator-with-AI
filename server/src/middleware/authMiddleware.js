@@ -28,4 +28,13 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-export { authenticate, optionalAuth };
+
+const adminOnly = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthenticated' });
+  if (req.user.role !== 'admin')
+    return res.status(403).json({ error: 'Admin access required' });
+  next();
+};
+
+
+export { authenticate, optionalAuth , adminOnly};
