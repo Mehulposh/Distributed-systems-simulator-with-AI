@@ -69,4 +69,29 @@ export const aiAPI = {
     },
 };
 
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+export const adminAPI = {
+  // Overview stats
+  stats: () => api.get('/admin/stats'),
+ 
+  // Users
+  getUsers:       (params)        => api.get('/admin/users', { params }),
+  updateUserRole: (id, role)      => api.patch(`/admin/users/${id}/role`, { role }),
+  deleteUser:     (id)            => api.delete(`/admin/users/${id}`),
+ 
+  // Architectures
+  getArchitectures:     (params)  => api.get('/admin/architectures', { params }),
+  updateArchVisibility: (id, v)   => api.patch(`/admin/architectures/${id}/visibility`, { isPublic: v }),
+  deleteArchitecture:   (id)      => api.delete(`/admin/architectures/${id}`),
+ 
+  // Presets
+  getPresets:    ()               => api.get('/admin/presets'),
+  deletePreset:  (id)             => api.delete(`/admin/presets/${id}`),
+ 
+  // Bootstrap — promote a user to admin using server secret
+  makeAdmin: (email, secret)      => api.post('/admin/make-admin', { email, secret }),
+};
+ 
+
 export default api;
