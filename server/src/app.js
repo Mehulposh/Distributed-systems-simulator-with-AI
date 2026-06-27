@@ -9,6 +9,7 @@ import architectureRoutes from './routes/ArchitectureRoutes.js';
 import simulationRoutes from './routes/SimulationRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import presetRoutes from './routes/PresetRoutes.js';
+import adminRoutes from './routes/adminRoutes.js'
 import { setupSimulationSocket } from './Simulationservice/Simulationservice.js';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json({ limit: '10mb' }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/architectures', architectureRoutes);
+app.use('/api/admin', adminRoutes)
 app.use('/api/simulation', simulationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/presets', presetRoutes);
