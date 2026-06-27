@@ -1,3 +1,8 @@
+/**
+ * Entry point for the backend server.
+ * Configures Express middleware, API routes, health checking,
+ * Socket.io simulation event handling, and MongoDB connectivity.
+ */
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';

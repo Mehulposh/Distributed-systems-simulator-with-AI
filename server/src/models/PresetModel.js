@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+/**
+ * Schema for saved architecture presets and templates.
+ */
 const presetSchema = new mongoose.Schema(
   {
     name: { 

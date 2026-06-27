@@ -64,6 +64,12 @@ const COMPONENT_PROFILES = {
   },
 };
 
+/**
+ * Generate a normally distributed random value.
+ * @param {number} mean
+ * @param {number} stdDev
+ * @returns {number}
+ */
 function gaussian(mean, stdDev) {
   let u = 0, v = 0;
   while (u === 0) u = Math.random();
@@ -71,6 +77,12 @@ function gaussian(mean, stdDev) {
   return mean + stdDev * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }
 
+/**
+ * Calculate percentile from a numeric array.
+ * @param {number[]} arr
+ * @param {number} p
+ * @returns {number}
+ */
 function percentile(arr, p) {
   if (!arr.length) return 0;
   const sorted = [...arr].sort((a, b) => a - b);
@@ -78,6 +90,14 @@ function percentile(arr, p) {
   return sorted[Math.max(0, idx)];
 }
 
+/**
+ * Compute metrics for an individual simulation node.
+ * @param {object} node
+ * @param {number} rps
+ * @param {object} config
+ * @param {Set<string>} failedNodes
+ * @returns {object}
+ */
 function computeNodeMetrics(node, rps, config, failedNodes) {
   const isDown = failedNodes.has(node.id);
   const profile = COMPONENT_PROFILES[node.type] || COMPONENT_PROFILES.server;
@@ -159,6 +179,12 @@ function computeNodeMetrics(node, rps, config, failedNodes) {
   };
 }
 
+/**
+ * Compute aggregated global simulation metrics.
+ * @param {object[]} nodeMetrics
+ * @param {number} rps
+ * @returns {object}
+ */
 function computeGlobalMetrics(nodeMetrics, rps) {
   if (!nodeMetrics.length) return {};
 
@@ -194,6 +220,10 @@ function computeGlobalMetrics(nodeMetrics, rps) {
 
 const activeSessions = new Map();
 
+/**
+ * Attach Socket.io event handlers for simulation control.
+ * @param {import('socket.io').Server} io
+ */
 function setupSimulationSocket(io) {
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);

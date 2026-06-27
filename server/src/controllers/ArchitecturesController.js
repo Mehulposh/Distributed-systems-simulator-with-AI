@@ -1,3 +1,7 @@
+/**
+ * Architecture controller for CRUD operations on user architectures.
+ * Includes public browsing, creation, editing, deletion, and forking.
+ */
 import Architecture from '../models/architectureModel.js'
 
 // ── Sanitise nodes before saving to MongoDB ─────────────────────────────────
@@ -31,6 +35,11 @@ function sanitiseNodes(nodes = []) {
 }
 // ────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Return the current user's saved architectures.
+ * @param { Request} req
+ * @param { Response} res
+ */
 // GET /api/architectures — user's saved architectures
 const getArchitectures = async (req,res) => {
     try {
@@ -42,6 +51,12 @@ const getArchitectures = async (req,res) => {
 }
 
 
+/**
+ * Return public architectures available in the gallery.
+ * Supports optional tag filtering and pagination.
+ * @param { Request} req
+ * @param { Response} res
+ */
 // GET /api/architectures/public — public gallery
 const getPublicArchitectures = async (req,res) => {
     try {

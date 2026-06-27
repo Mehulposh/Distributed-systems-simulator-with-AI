@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+/**
+ * Schema for persisted simulation run logs.
+ */
 const simulationLogSchema = new mongoose.Schema(
   {
     architectureId: { 

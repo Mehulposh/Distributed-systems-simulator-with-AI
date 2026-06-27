@@ -1,3 +1,6 @@
+/**
+ * Admin routes for statistics, user management, moderation, and preset control.
+ */
 import express from 'express'
 import { authenticate, adminOnly } from '../middleware/authMiddleware.js'
 import {

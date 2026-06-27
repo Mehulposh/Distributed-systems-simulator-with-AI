@@ -1,3 +1,6 @@
+/**
+ * Routes for architecture CRUD operations and public architecture browsing.
+ */
 import express from 'express'
 import {
     forkArchitecture,

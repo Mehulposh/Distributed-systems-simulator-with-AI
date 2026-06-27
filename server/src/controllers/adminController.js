@@ -1,9 +1,17 @@
+/**
+ * Admin controller for statistics, user management, architecture moderation,
+ * preset handling, and admin bootstrapping endpoints.
+ */
 import User          from '../models/userModel.js';
 import Architecture  from '../models/architectureModel.js';
 import SimulationLog from '../models/SimulationlogModel.js';
 import Preset        from '../models/PresetModel.js';
 
-
+/**
+ * Return admin dashboard KPIs and high-level trends.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getStats = async (req,res) => {
     try {
         const [
@@ -85,6 +93,11 @@ const getStats = async (req,res) => {
 }
 
 
+/**
+ * List users with optional search and role filtering.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getUsers = async (req,res) => {
     try {
         const { page = 1, limit = 20, search = '', role = '' } = req.query;
@@ -124,6 +137,11 @@ const getUsers = async (req,res) => {
 }
 
 
+/**
+ * Change the role of a user, preventing self-role changes.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const updateRole = async (req,res) => {
     try {
         const { role } = req.body;
@@ -148,6 +166,11 @@ const updateRole = async (req,res) => {
 }
 
 
+/**
+ * Delete a user and related data, excluding the current admin.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const deleteUser = async (req,res) => {
     try {
         if (req.params.id === req.user._id.toString())
@@ -166,6 +189,11 @@ const deleteUser = async (req,res) => {
 }
 
 
+/**
+ * Retrieve architectures for admin moderation filtering by public status.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getArchitecture = async (req,res) => {
     try {
         const { page = 1, limit = 20, search = '', isPublic = '' } = req.query;
@@ -193,6 +221,11 @@ const getArchitecture = async (req,res) => {
 }
 
 
+/**
+ * Set architecture visibility to public or private.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const updateVisibility = async (req,res) => {
     try {
         const { isPublic } = req.body;
@@ -212,6 +245,11 @@ const updateVisibility = async (req,res) => {
 }
 
 
+/**
+ * Delete an architecture entry by id.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const deleteArchitecture = async (req,res) => {
     try {
         await Architecture.findByIdAndDelete(req.params.id);
@@ -222,6 +260,11 @@ const deleteArchitecture = async (req,res) => {
 }
 
 
+/**
+ * Return the preset library for admin review.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getPresets = async (req,res) => {
     try {
         const presets = await Preset.find().sort({ popularity: -1 });
@@ -232,6 +275,11 @@ const getPresets = async (req,res) => {
 }
 
 
+/**
+ * Delete a preset by id.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const deletePresets = async (req,res) => {
     try {
         await Preset.findByIdAndDelete(req.params.id);
@@ -243,7 +291,11 @@ const deletePresets = async (req,res) => {
 
 
 // ── POST /api/admin/make-first-admin ─────────────────────────────────────────
-// One-time bootstrap: promotes the first registered user to admin
+/**
+ * Promote a specific user to admin using a bootstrap secret.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const Promote = async (req,res) => {
     try {
         const { email, secret } = req.body;

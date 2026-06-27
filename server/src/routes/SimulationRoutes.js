@@ -1,3 +1,7 @@
+/**
+ * Simulation routes handle secured persistence and retrieval of simulation history.
+ * They require authentication and expose log creation and query endpoints.
+ */
 import express from 'express'
 import {
     getLogByID,

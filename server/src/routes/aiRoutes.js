@@ -1,3 +1,6 @@
+/**
+ * AI-powered routes for architecture analysis, generation, and explanations.
+ */
 import express from 'express';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { GoogleGenAI } from "@google/genai";
@@ -26,6 +29,12 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+/**
+ * Send a prompt to Gemini and return the generated text.
+ * @param {string} prompt
+ * @param {string} [system='']
+ * @returns {Promise<string>}
+ */
 async function askGemini(prompt, system = '') {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
@@ -274,6 +283,13 @@ router.post('/explain-component', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * Build a text description of the architecture and metrics for AI analysis.
+ * @param {Array} nodes
+ * @param {Array} edges
+ * @param {Array} metrics
+ * @returns {string}
+ */
 function buildArchDescription(nodes, edges, metrics) {
   const nodeList = nodes
     .map((n) => {

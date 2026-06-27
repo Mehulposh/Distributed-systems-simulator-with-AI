@@ -1,6 +1,13 @@
+/**
+ * Controller for simulation log storage and retrieval.
+ */
 import Simulationlog  from "../models/SimulationlogModel.js";
 
-// POST /api/simulation/log — save a simulation run
+/**
+ * Persist a simulation log for the current user.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const saveLog = async (req,res) => {
     try {
         const { architectureId, config, summary, events } = req.body;
@@ -18,7 +25,11 @@ const saveLog = async (req,res) => {
 }
 
 
-// GET /api/simulation/logs — user's simulation history
+/**
+ * Return recent simulation logs for the authenticated user.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getLogsHistory = async (req,res) => {
     try {
         const logs = await Simulationlog.find({ userId: req.user._id })
@@ -33,7 +44,11 @@ const getLogsHistory = async (req,res) => {
 }
 
 
-// GET /api/simulation/logs/:id
+/**
+ * Return a single simulation log by id for the authenticated user.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const getLogByID = async (req,res) => {
     try {
         const log = await Simulationlog.findOne({ _id: req.params.id, userId: req.user._id });

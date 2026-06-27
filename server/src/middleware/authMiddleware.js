@@ -1,6 +1,17 @@
+/**
+ * Authentication middleware for protected routes.
+ * Validates JWT tokens, attaches the authenticated user to req.user,
+ * and provides optional or admin-only route enforcement.
+ */
 import jwt from  'jsonwebtoken';
 import User from  '../models/userModel.js';
 
+/**
+ * Verify the bearer token and attach the authenticated user to req.user.
+ * @param { Request} req
+ * @param { Response} res
+ * @param { NextFunction} next
+ */
 const authenticate = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -17,6 +28,12 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+/**
+ * Attempt optional authentication and continue even if no token exists.
+ * @param { Request} req
+ * @param { Response} res
+ * @param { NextFunction} next
+ */
 const optionalAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -28,7 +45,12 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-
+/**
+ * Restrict route access to authenticated admin users.
+ * @param { Request} req
+ * @param { Response} res
+ * @param { NextFunction} next
+ */
 const adminOnly = (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: 'Unauthenticated' });
   if (req.user.role !== 'admin')

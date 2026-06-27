@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+/**
+ * Schema describing individual nodes in an architecture.
+ */
 const nodeSchema = new mongoose.Schema({
   id: String,
   type: String,
@@ -7,6 +10,9 @@ const nodeSchema = new mongoose.Schema({
   data: mongoose.Schema.Types.Mixed,
 });
 
+/**
+ * Schema describing connections between architecture nodes.
+ */
 const edgeSchema = new mongoose.Schema({
   id: String,
   source: String,
@@ -15,6 +21,9 @@ const edgeSchema = new mongoose.Schema({
   data: mongoose.Schema.Types.Mixed,
 });
 
+/**
+ * Schema for user-created distributed system architectures.
+ */
 const architectureSchema = new mongoose.Schema(
   {
     userId: { 

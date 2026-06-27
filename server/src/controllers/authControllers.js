@@ -1,7 +1,14 @@
+/**
+ * Authentication controller functions for login, registration, and profile access.
+ */
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 
-
+/**
+ * Generate a JWT for an authenticated user.
+ * @param {string} userId
+ * @returns {string}
+ */
 const signToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
  
@@ -28,6 +35,11 @@ const Register = async (req,res) => {
 }
 
 // POST /api/auth/login
+/**
+ * Authenticate a user and return a JWT token.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const Login = async (req,res)=> {
     try {
         const { email, password } = req.body;
@@ -42,12 +54,16 @@ const Login = async (req,res)=> {
         const token = signToken(user._id);
         res.json({ token, user });
     } catch (error) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: error.message });
     }
 }
 
 
-// GET /api/auth/me
+/**
+ * Return the current authenticated user's profile.
+ * @param { Request} req
+ * @param { Response} res
+ */
 const GetMe = (req,res) => {
     res.json({ user: req.user });
 }

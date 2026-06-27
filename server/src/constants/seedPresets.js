@@ -1,3 +1,7 @@
+/**
+ * Seed preset architectures used to populate the database on first startup.
+ * These are example distributed systems templates for the simulator.
+ */
 const SEED_PRESETS = [
   {
     name: 'Basic Web App',

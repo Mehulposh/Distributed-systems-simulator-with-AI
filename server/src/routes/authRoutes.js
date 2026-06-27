@@ -1,3 +1,6 @@
+/**
+ * Authentication routes for user registration, login, and profile retrieval.
+ */
 import express from 'express'
 import { authenticate } from '../middleware/authMiddleware.js'
 import {
