@@ -1,5 +1,8 @@
-// Component type definitions with icons, colors, default configs
-
+/**
+ * Node type metadata used by the architecture editor and simulation UI.
+ * Each node type includes display labels, icons, default colors, descriptions,
+ * and initial configuration values for the editor.
+ */
 export const NODE_TYPES = {
   loadBalancer: {
     label: 'Load Balancer',
@@ -103,6 +106,12 @@ export const COMPONENT_CATEGORIES = [
   },
 ];
 
+/**
+ * Return node styling values for a given component type and status.
+ * @param {string} type
+ * @param {string} [status='healthy']
+ * @returns {{background:string,borderColor:string,color:string}}
+ */
 export function getNodeStyle(type, status = 'healthy') {
   const config = NODE_TYPES[type] || NODE_TYPES.server;
   const statusColors = {
