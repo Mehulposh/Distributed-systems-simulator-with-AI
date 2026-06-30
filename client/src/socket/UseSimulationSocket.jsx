@@ -15,6 +15,7 @@ export function useSimulationSocket() {
     nodes,
     simulationConfig,
     edges,
+    setLastSimulationSummary,
   } = useAppStore();
 
   useEffect(() => {
@@ -35,8 +36,12 @@ export function useSimulationSocket() {
       addAlert(alert);
     });
 
-    socket.on('simulation:ended', () => {
+    // Capture the summary so the UI can prompt "Save this run?"
+    socket.on('simulation:ended', (payload) => {
       setSimulating(false);
+      if (payload?.summary) {
+        setLastSimulationSummary(payload.summary);
+      }
     });
 
     socket.on('simulation:error', ({ message }) => {
@@ -54,6 +59,7 @@ export function useSimulationSocket() {
 
   const startSimulation = useCallback(() => {
     if (!socketRef.current) return;
+    setLastSimulationSummary(null); // clear any previous "save this run" prompt
     socketRef.current.emit('simulation:start', {
       config: simulationConfig,
       nodes,
