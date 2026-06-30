@@ -3,6 +3,7 @@
  * Includes public browsing, creation, editing, deletion, and forking.
  */
 import Architecture from '../models/architectureModel.js'
+import User from '../models/userModel.js'
 
 // ── Sanitise nodes before saving to MongoDB ─────────────────────────────────
 const TYPE_ALIAS = {
@@ -107,6 +108,11 @@ const createArchitecture = async (req,res) => {
             isPublic: isPublic || false,
             tags: tags || [],
         });
+
+        // Keep User.savedArchitectures in sync
+        await User.findByIdAndUpdate(req.user._id, {
+            $addToSet: { savedArchitectures: arch._id },
+        });
         res.status(201).json(arch);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -136,6 +142,11 @@ const deleteArchitecutre = async (req,res) => {
     try {
         const arch = await Architecture.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
         if (!arch) return res.status(404).json({ error: 'Architecture not found' });
+
+        // Keep User.savedArchitectures in sync
+        await User.findByIdAndUpdate(req.user._id, {
+            $pull: { savedArchitectures: arch._id },
+        });
         res.json({ message: 'Deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -162,6 +173,11 @@ const forkArchitecture = async (req,res) => {
     
         original.forkCount += 1;
         await original.save();
+
+        // Keep User.savedArchitectures in sync for the forking user
+        await User.findByIdAndUpdate(req.user._id, {
+            $addToSet: { savedArchitectures: fork._id },
+        });
         res.status(201).json(fork);
     } catch (err) {
         res.status(500).json({ error: err.message });
