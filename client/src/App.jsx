@@ -11,11 +11,14 @@ import AuthModal from './component/Authmodal.jsx';
 import AIGenerateModal from './component/Aigeneratemodal.jsx';
 import LoadModal from './component/Loadmodal.jsx';
 import AlertsToast from './component/Alertstoast.jsx';
+import SaveLogPrompt from './component/Savelogprompt.jsx';
+import SimulationHistoryModal from './component/Simulationhistorymodal.jsx';
 import { useSimulationSocket } from './socket/UseSimulationSocket.jsx';
 import { BarChart2, MessageSquare, LogIn, LogOut, User,
   LayoutDashboard, Bot, Menu, X, ShieldCheck } from 'lucide-react';
 
-import AdminDashboard from './pages/Admindashboard.jsx';
+  import AdminDashboard from './pages/Admindashboard.jsx';
+
 
 // Hook to get window width reactively
 function useWindowWidth() {
@@ -38,6 +41,7 @@ export default function App() {
   const [showAIGen, setShowAIGen]   = useState(false);
   const [showLoad, setShowLoad]     = useState(false);
   const [showAdmin, setShowAdmin]   = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [rightPanel, setRightPanel] = useState('metrics');
   const [saveStatus, setSaveStatus] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);  // mobile drawer
@@ -127,6 +131,7 @@ export default function App() {
           onSave={handleSave}
           onOpenLoad={() => { if (!token) { setShowAuth(true); return; } setShowLoad(true); }}
           onAIGenerate={() => { if (!token) { setShowAuth(true); return; } setShowAIGen(true); }}
+          onOpenHistory={() => { if (!token) { setShowAuth(true); return; } setShowHistory(true); }}
           compact
         />
 
@@ -182,10 +187,12 @@ export default function App() {
         )}
 
         <AlertsToast />
+        <SaveLogPrompt />
         {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
         {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
         {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
         {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
+        {showHistory && <SimulationHistoryModal onClose={() => setShowHistory(false)} />}
       </div>
     );
   }
@@ -258,6 +265,7 @@ export default function App() {
               onSave={handleSave}
               onOpenLoad={() => { if (!token) { setShowAuth(true); return; } setShowLoad(true); }}
               onAIGenerate={() => { if (!token) { setShowAuth(true); return; } setShowAIGen(true); }}
+              onOpenHistory={() => { if (!token) { setShowAuth(true); return; } setShowHistory(true); }}
               compact
             />
             {/* Canvas top 60%, panel bottom 40% */}
@@ -274,10 +282,12 @@ export default function App() {
         </div>
 
         <AlertsToast />
+        <SaveLogPrompt />
         {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
         {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
         {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
         {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
+        {showHistory && <SimulationHistoryModal onClose={() => setShowHistory(false)} />}
       </div>
     );
   }
@@ -340,23 +350,26 @@ export default function App() {
             onSave={handleSave}
             onOpenLoad={() => { if (!token) { setShowAuth(true); return; } setShowLoad(true); }}
             onAIGenerate={() => { if (!token) { setShowAuth(true); return; } setShowAIGen(true); }}
+            onOpenHistory={() => { if (!token) { setShowAuth(true); return; } setShowHistory(true); }}
           />
           <div className="flex-1 relative overflow-hidden">
             <Canvas />
             <NodeInspector />
           </div>
         </div>
-        <div className= "shrink-0 overflow-hidden"
+        <div className="shrink-0 overflow-hidden"
           style={{ width: 340, borderLeft: '1px solid #1e2335' }}>
           {rightPanel === 'metrics' ? <MetricsDashboard /> : <AIPanel />}
         </div>
       </div>
 
       <AlertsToast />
+      <SaveLogPrompt />
       {showAuth    && <AuthModal        onClose={() => setShowAuth(false)} />}
       {showAIGen   && <AIGenerateModal  onClose={() => setShowAIGen(false)} />}
       {showLoad    && <LoadModal        onClose={() => setShowLoad(false)} />}
       {showAdmin   && <AdminDashboard   onClose={() => setShowAdmin(false)} />}
+      {showHistory && <SimulationHistoryModal onClose={() => setShowHistory(false)} />}
     </div>
   );
 }
