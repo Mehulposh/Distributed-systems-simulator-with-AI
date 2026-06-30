@@ -1,14 +1,6 @@
 
 
 services:
-  ollama:
-    image: ollama/ollama
-    container_name: distsim-ollama
-    ports:
-      - '11434:11434'
-    volumes:
-      - ollama_data:/root/.ollama
-
   backend:
     build:
       context: ./server
@@ -24,8 +16,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - CLIENT_URL=http://frontend:5173
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-    depends_on:
-      - ollama
+    
     volumes:
       - ./server:/app
       - /app/node_modules
