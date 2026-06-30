@@ -98,4 +98,8 @@ export const useAppStore = create((set) => ({
   // Simulated failure injection state.
   failedNodes: [],
   setFailedNodes: (nodes) => set({ failedNodes: nodes }),
+
+  // Most recently completed simulation summary — used to prompt "Save this run?"
+  lastSimulationSummary: null,
+  setLastSimulationSummary: (summary) => set({ lastSimulationSummary: summary }),
 }));
