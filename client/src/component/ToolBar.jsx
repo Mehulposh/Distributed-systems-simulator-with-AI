@@ -1,9 +1,9 @@
-import  { useState } from 'react';
-import { Play, Square, Zap, AlertTriangle, GitBranch, Save, FolderOpen, Cpu } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Square, Zap, AlertTriangle, GitBranch, Save, FolderOpen, Cpu, History } from 'lucide-react';
 import { useAppStore } from '../zustand/UseAppstore.js';
 import { useSimulationSocket } from '../socket/UseSimulationSocket.jsx';
 
-export default function Toolbar({ onSave, onOpenLoad, onAIGenerate, compact = false }) {
+export default function Toolbar({ onSave, onOpenLoad, onAIGenerate, onOpenHistory, compact = false }) {
   const {
     isSimulating, simulationConfig, setSimulationConfig,
     nodes, globalMetrics, currentArchName, setCurrentArchName, selectedNode,
@@ -50,6 +50,13 @@ export default function Toolbar({ onSave, onOpenLoad, onAIGenerate, compact = fa
               style={{ background: '#1e2335', color: '#94a3b8', border: '1px solid #2e3650' }}>
               <FolderOpen size={11} />
             </button>
+            {onOpenHistory && (
+              <button onClick={onOpenHistory}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: '#1e2335', color: '#94a3b8', border: '1px solid #2e3650' }}>
+                <History size={11} />
+              </button>
+            )}
             <button onClick={handleSave} disabled={saving}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium disabled:opacity-60"
               style={{ background: '#4c6ef5', color: 'white' }}>
@@ -273,6 +280,14 @@ export default function Toolbar({ onSave, onOpenLoad, onAIGenerate, compact = fa
           style={{ background: '#1e2335', color: '#94a3b8', border: '1px solid #2e3650' }}>
           <FolderOpen size={12} />Load
         </button>
+        {onOpenHistory && (
+          <button onClick={onOpenHistory}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium"
+            style={{ background: '#1e2335', color: '#94a3b8', border: '1px solid #2e3650' }}
+            title="Simulation history">
+            <History size={12} />History
+          </button>
+        )}
         <button onClick={handleSave} disabled={saving}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium disabled:opacity-60"
           style={{ background: '#4c6ef5', color: 'white' }}>
