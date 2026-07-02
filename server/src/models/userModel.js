@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema(
         enum: ['user', 'admin'], 
         default: 'user' 
     },
+    totalSimulations: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
