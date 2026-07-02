@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, X, CheckCircle } from 'lucide-react';
+import { Save, X, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../zustand/UseAppstore.js';
 import { simAPI } from '../api/apiService.js';
 
@@ -11,13 +11,15 @@ export default function SaveLogPrompt() {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
+  const [error, setError]   = useState('');
 
   if (!lastSimulationSummary || !token) return null;
 
   const handleSave = async () => {
     setSaving(true);
+    setError('');
     try {
-      await simAPI.saveLog({
+      const payload = {
         architectureId: currentArchId || undefined,
         config: simulationConfig,
         summary: {
@@ -29,11 +31,25 @@ export default function SaveLogPrompt() {
           cacheHitRatio: lastSimulationSummary.cacheHitRatio,
           totalRequests: lastSimulationSummary.rps,
         },
-      });
+      };
+
+      const savedLog = await simAPI.saveLog(payload);
+
+      // Sanity check: the backend should return a document with a Mongo _id.
+      // If it doesn't, something upstream silently failed (e.g. proxy
+      // returning an HTML error page that axios parsed as "success").
+      if (!savedLog || !savedLog._id) {
+        throw new Error('Server did not return a saved log document');
+      }
+
+      // eslint-disable-next-line no-console
+      console.log('Simulation log saved:', savedLog);
+
       setSaved(true);
       setTimeout(() => setLastSimulationSummary(null), 1500);
     } catch (err) {
       console.error('Failed to save simulation log:', err);
+      setError(err?.error || err?.message || 'Save failed — check console for details');
     } finally {
       setSaving(false);
     }
@@ -58,6 +74,26 @@ export default function SaveLogPrompt() {
           <CheckCircle size={16} />
           Simulation log saved
         </div>
+      ) : error ? (
+        <>
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <AlertTriangle size={14} color="#ef4444" className="flex-shrink-0" />
+            <span className="text-xs text-red-400 truncate">{error}</span>
+          </div>
+          <button
+            onClick={handleSave}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0"
+            style={{ background: '#ef444420', color: '#ef4444', border: '1px solid #ef444440' }}
+          >
+            Retry
+          </button>
+          <button
+            onClick={() => setLastSimulationSummary(null)}
+            className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </>
       ) : (
         <>
           <div className="flex-1 min-w-0">
@@ -71,7 +107,7 @@ export default function SaveLogPrompt() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all hover:opacity-90 disabled:opacity-60"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0 transition-all hover:opacity-90 disabled:opacity-60"
             style={{ background: '#4c6ef5', color: 'white' }}
           >
             <Save size={12} />
@@ -79,7 +115,7 @@ export default function SaveLogPrompt() {
           </button>
           <button
             onClick={() => setLastSimulationSummary(null)}
-            className="text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+            className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
           >
             <X size={14} />
           </button>
