@@ -258,3 +258,7 @@ Both scripts are idempotent — safe to run multiple times.
 ## License
 
 This project is currently licensed under the ISC license.
+
+<div align="center">
+  Built with React, Node.js, MongoDB, Socket.io and Claude AI
+</div>
