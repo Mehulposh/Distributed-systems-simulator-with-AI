@@ -8,7 +8,7 @@ import axios from 'axios';
  * Shared axios instance configured with the API base path and timeout.
  */
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   timeout: 30000,
 });
 
