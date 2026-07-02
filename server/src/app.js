@@ -32,12 +32,12 @@ app.use(cors({ origin: process.env.CLIENT_URL || 'http://frontend:5173', credent
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/architectures', architectureRoutes);
-app.use('/api/admin', adminRoutes)
-app.use('/api/simulation', simulationRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/presets', presetRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/architectures', architectureRoutes);
+app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/simulation', simulationRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/presets', presetRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
