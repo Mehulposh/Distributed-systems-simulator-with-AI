@@ -140,22 +140,114 @@ This starts:
 - Frontend on `http://localhost:5173`
 - Backend on `http://localhost:8080`
 
-## API Overview
-
-The backend exposes REST endpoints under `/api` for:
-
-- Authentication: `/api/auth`
-- Architectures: `/api/architectures`
-- Simulations: `/api/simulation`
-- AI features: `/api/ai`
-- Presets: `/api/presets`
-- Admin actions: `/api/admin`
+## API Reference
+ 
+### Auth
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | None | Create a new account |
+| POST | `/api/v1/auth/login` | None | Log in, receive JWT |
+| GET | `/api/v1/auth/me` | JWT | Get current user |
+ 
+### Architectures
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/v1/architectures` | JWT | List your saved architectures |
+| POST | `/api/v1/architectures` | JWT | Save a new architecture |
+| GET | `/api/v1/architectures/:id` | Optional | Load by ID (public or owned) |
+| PUT | `/api/v1/architectures/:id` | JWT | Update an architecture |
+| DELETE | `/api/v1/architectures/:id` | JWT | Delete an architecture |
+| GET | `/api/v1/architectures/public` | Optional | Browse community gallery |
+| POST | `/api/v1/architectures/:id/fork` | JWT | Fork a public architecture |
+ 
+### Simulation
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/simulation/log` | JWT | Save a simulation run |
+| GET | `/api/v1/simulation/logs` | JWT | Get your simulation history |
+ 
+### AI
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/ai/analyze` | JWT | Analyze architecture for issues |
+| POST | `/api/v1/ai/chat` | JWT | Streaming chat (SSE) |
+| POST | `/api/v1/ai/generate-preset` | JWT | Generate architecture from prompt |
+| POST | `/api/v1/ai/explain-component` | JWT | Explain a single component |
+ 
+### Admin
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/v1/admin/stats` | Admin | Platform analytics |
+| GET | `/api/v1/admin/users` | Admin | List all users |
+| PATCH | `/api/v1/admin/users/:id/role` | Admin | Promote/demote user |
+| DELETE | `/api/v1/admin/users/:id` | Admin | Delete user and their data |
+| GET | `/api/v1/admin/architectures` | Admin | List all architectures |
+| PATCH | `/api/v1/admin/architectures/:id/visibility` | Admin | Toggle public/private |
+| DELETE | `/api/v1/admin/architectures/:id` | Admin | Delete any architecture |
+| GET | `/api/v1/admin/presets` | Admin | List all presets |
+| DELETE | `/api/v1/admin/presets/:id` | Admin | Delete a preset |
+| POST | `/api/v1/admin/make-admin` | Admin | Promote user to admin |
+ 
+### WebSocket Events
+```
+Client → Server
+  simulation:start    { config, nodes, edges }
+  simulation:stop     {}
+  simulation:inject   { type: 'kill' | 'spike' | 'partition', nodeId? }
+ 
+Server → Client
+  simulation:started  { sessionId }
+  metrics:tick        { nodeMetrics[], globalMetrics, failedNodes[] }
+  simulation:alert    { type, message, nodeId? }
+  simulation:ended    { summary }
+  simulation:error    { message }
+```
+ 
+---
 
 Health check:
 
 ```bash
 curl http://localhost:8080/api/health
 ```
+
+---
+ 
+## Component Simulation Profiles
+ 
+Each component type has a realistic performance model built into the simulation engine:
+ 
+| Component | Base Latency | Max Throughput | Base Error Rate |
+|---|---|---|---|
+| Load Balancer | 2ms | 100,000 rps | 0.1% |
+| Redis Cache | 0.5ms hit / 50ms miss | 200,000 rps | 0.05% |
+| PostgreSQL DB | 20ms read / 40ms write | 5,000 rps | 0.5% |
+| DB Read Replica | 18ms | 8,000 rps | 0.3% |
+| Kafka Queue | 3ms | 50,000 rps | 0.1% |
+| API Gateway | 5ms | 80,000 rps | 0.2% |
+| CDN | 0.3ms | 500,000 rps | 0.01% |
+| DB Shard | 22ms | 4,000 rps | 0.6% |
+| App Server | 10ms | 10,000 rps | 1.0% |
+ 
+Latency increases exponentially as utilisation exceeds 80% of max throughput, modelled using a Gaussian distribution with ±30% variance per tick.
+
+---
+ 
+## Data Migration Scripts
+ 
+If you have data from before certain schema changes were introduced, run these one-time backfill scripts:
+ 
+```bash
+cd backend
+ 
+# Links architectures to their owner's savedArchitectures array
+node scripts/backfill-saved-architectures.js
+ 
+# Sets totalSimulations on each user from their existing SimulationLog records
+node scripts/backfill-total-simulations.js
+```
+ 
+Both scripts are idempotent — safe to run multiple times.
 
 ## Notes
 
