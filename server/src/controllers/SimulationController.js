@@ -18,6 +18,9 @@ const saveLog = async (req,res) => {
             summary,
             events: events || [],
         });
+         // Keep User.totalSimulations in sync
+        await User.findByIdAndUpdate(req.user._id, { $inc: { totalSimulations: 1 } });
+         console.log(`[simulation/log] Saved log ${log._id} for user ${req.user._id}`);
         res.status(201).json(log);
     } catch (err) {
         res.status(500).json({ error: err.message });
